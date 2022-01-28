@@ -45,7 +45,7 @@ jobs:
       - name: Set $SNOWFLAKE_DATABASE to an ephemeral database
         if: "!endsWith(github.ref, '/main')"
         run: |
-          output=$(python utils/get_suffix.py --branch ${BRANCH_NAME})
+          output=$(python ../utils/get_suffix.py --branch ${BRANCH_NAME})
           echo "SNOWFLAKE_DATABASE=CI_$output" >> $GITHUB_ENV
 
       - name: Cache DBT Dependencies
