@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import argparse
 
 
@@ -8,7 +9,7 @@ def main(branch_name: str) -> None:
     :return: database friendly name
     """
     upper_branch = branch_name.upper()
-    return (upper_branch.replace("-", "_"))
+    print(upper_branch.replace("-", "_"))
 
 
 if __name__ == "__main__":

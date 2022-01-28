@@ -34,25 +34,22 @@ jobs:
           pip install dbt-core==1.0.1 dbt-snowflake
       - name: Get branch name (merge)
         if: github.event_name != 'pull_request' && endsWith(github.ref, '/main') != true
-        shell: bash
         run: echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | tr / -)" >> $GITHUB_ENV
 
       - name: Get branch name (pull request)
         if: github.event_name == 'pull_request' && endsWith(github.ref, '/main') != true
-        shell: bash
         run: echo "BRANCH_NAME=$(echo ${GITHUB_HEAD_REF} | tr / -)" >> $GITHUB_ENV
 
       - name: Set $SNOWFLAKE_DATABASE to an ephemeral database
         if: "!endsWith(github.ref, '/main')"
         run: |
-          output=$(python ../utils/get_suffix.py --branch ${BRANCH_NAME})
-          echo "SNOWFLAKE_DATABASE=CI_$output" >> $GITHUB_ENV
+          echo "SNOWFLAKE_DATABASE=CI_$(python ../utils/get_suffix.py --branch ${{ env.BRANCH_NAME }} )" >> $GITHUB_ENV
 
       - name: Cache DBT Dependencies
         id: cache-dbt-deps
         uses: actions/cache@v2
         with:
-          path: snowflake/snowflake_dbt/dbt_packages/
+          path: transformation/dbt/${{ env.DBT_PROJECT }}/dbt_packages/
           key: ${{ env.DBT_VERSION }}-dbt-deps-${{ hashFiles('**/${{ env.DBT_PROJECT }}/packages.yml') }}
 
       - name: Install DBT Packages
@@ -66,7 +63,7 @@ jobs:
       - name: dbt Create Epehemeral DB
         if: "!endsWith(github.ref, '/main')"
         run: |
-          dbt run-operation set_up_db --args "{db: ${ env.SNOWFLAKE_DATABASE }}"
+          dbt run-operation setup_database --args '{database: ${{ env.SNOWFLAKE_DATABASE }} }'
 
       - name: Build DBT
         run: dbt build
