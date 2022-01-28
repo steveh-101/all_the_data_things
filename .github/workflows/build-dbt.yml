@@ -1,0 +1,72 @@
+name: Build DBT
+on:
+  push:
+
+env:
+  SNOWFLAKE_DATABASE: PREPROD_ANALYTICS
+  DBT_PROJECT: jaffle_shop
+
+jobs:
+
+  Build:
+    runs-on: ubuntu-latest
+
+    env:
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      DBT_PROFILES_DIR: .
+
+    defaults:
+      run:
+        working-directory: transformation/dbt/${{ env.DBT_PROJECT }}
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@master
+
+      - uses: actions/setup-python@v1
+        with:
+          python-version: "3.9.x"
+
+      - name: Install DBT
+        run: |
+          pip install dbt-core==1.0.1 dbt-snowflake
+      - name: Get branch name (merge)
+        if: github.event_name != 'pull_request' && endsWith(github.ref, '/main') != true
+        shell: bash
+        run: echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | tr / -)" >> $GITHUB_ENV
+
+      - name: Get branch name (pull request)
+        if: github.event_name == 'pull_request' && endsWith(github.ref, '/main') != true
+        shell: bash
+        run: echo "BRANCH_NAME=$(echo ${GITHUB_HEAD_REF} | tr / -)" >> $GITHUB_ENV
+
+      - name: Set $SNOWFLAKE_DATABASE to an ephemeral database
+        if: "!endsWith(github.ref, '/main')"
+        run: |
+          output=$(python utils/get_suffix.py --branch ${BRANCH_NAME})
+          echo "SNOWFLAKE_DATABASE=CI_$output" >> $GITHUB_ENV
+
+      - name: Cache DBT Dependencies
+        id: cache-dbt-deps
+        uses: actions/cache@v2
+        with:
+          path: snowflake/snowflake_dbt/dbt_packages/
+          key: ${{ env.DBT_VERSION }}-dbt-deps-${{ hashFiles('**/${{ env.DBT_PROJECT }}/packages.yml') }}
+
+      - name: Install DBT Packages
+        if: steps.cache-dbt-deps.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          echo ${{ env.SNOWFLAKE_ACCOUNT }}
+          echo ${{ env.SNOWFLAKE_DATABASE }}
+          dbt deps --target ci
+
+      - name: dbt Create Epehemeral DB
+        if: "!endsWith(github.ref, '/main')"
+        run: |
+          dbt run-operation set_up_db --args "{db: ${ env.SNOWFLAKE_DATABASE }}"
+
+      - name: Build DBT
+        run: dbt build
