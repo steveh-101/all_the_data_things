@@ -1,9 +1,9 @@
-name: Build DBT
+name: Cleanup DBT
 on:
-  push:
+  pull_request:
+    types: [closed]
 
 env:
-  SNOWFLAKE_DATABASE: PREPROD_ANALYTICS
   DBT_PROJECT: jaffle_shop
 
 jobs:
@@ -33,20 +33,6 @@ jobs:
         run: |
           pip install dbt-core==1.0.1 dbt-snowflake
 
-      - name: Get Branch Name (Pull Request)
-        if: github.event_name == 'pull_request' && endsWith(github.ref, '/main') != true
-        run: echo "BRANCH_NAME=$(echo ${GITHUB_HEAD_REF} | tr / -)" >> $GITHUB_ENV
-
-      - name: Get Branch Name (merge)
-        if: github.event_name != 'pull_request'
-        shell: bash
-        run: echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | tr / -)" >> $GITHUB_ENV
-
-      - name: Set $SNOWFLAKE_DATABASE to an Ephemeral Database
-        if: "!endsWith(github.ref, '/main')"
-        run: |
-          echo "SNOWFLAKE_DATABASE=CI_$(python ../utils/get_suffix.py --branch ${{ env.BRANCH_NAME }} )" >> $GITHUB_ENV
-
       - name: Cache DBT Dependencies
         id: cache-dbt-deps
         uses: actions/cache@v2
@@ -62,10 +48,16 @@ jobs:
           echo ${{ env.SNOWFLAKE_DATABASE }}
           dbt deps --target ci
 
-      - name: Create Ephemeral Database
+      - name: Get Branch Name (Pull Request)
+        if: github.event_name == 'pull_request' && endsWith(github.ref, '/main') != true
+        run: echo "BRANCH_NAME=$(echo ${GITHUB_HEAD_REF} | tr / -)" >> $GITHUB_ENV
+
+      - name: Set $SNOWFLAKE_DATABASE to an Ephemeral Database
         if: "!endsWith(github.ref, '/main')"
         run: |
-          dbt run-operation setup_database --args '{database: ${{ env.SNOWFLAKE_DATABASE }} }'
+          echo "SNOWFLAKE_DATABASE=CI_$(python ../utils/get_suffix.py --branch ${{ env.BRANCH_NAME }} )" >> $GITHUB_ENV
 
-      - name: Build DBT
-        run: dbt build
+      - name: Drop Ephemeral Database
+        run: |
+          dbt run-operation drop_database --args '{database: ${{ env.SNOWFLAKE_DATABASE }} }'
+        if: (github.event.action == 'closed' || github.event.pull_request.merged == true)
