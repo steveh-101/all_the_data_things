@@ -24,7 +24,7 @@ jobs:
         working-directory: transformation/dbt/${{ env.DBT_PROJECT }}
 
     steps:
-      - name: Check out
+      - name: Checkout
         uses: actions/checkout@master
 
       - uses: actions/setup-python@v1
@@ -34,15 +34,15 @@ jobs:
       - name: Install DBT
         run: |
           pip install dbt-core==1.0.1 dbt-snowflake
-      - name: Get branch name (merge)
+      - name: Get Branch Name (Merge)
         if: github.event_name != 'pull_request' && endsWith(github.ref, '/main') != true
         run: echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | tr / -)" >> $GITHUB_ENV
 
-      - name: Get branch name (pull request)
+      - name: Get Branch Name (Pull Request)
         if: github.event_name == 'pull_request' && endsWith(github.ref, '/main') != true
         run: echo "BRANCH_NAME=$(echo ${GITHUB_HEAD_REF} | tr / -)" >> $GITHUB_ENV
 
-      - name: Set $SNOWFLAKE_DATABASE to an ephemeral database
+      - name: Set $SNOWFLAKE_DATABASE to an Ephemeral Database
         if: "!endsWith(github.ref, '/main')"
         run: |
           echo "SNOWFLAKE_DATABASE=CI_$(python ../utils/get_suffix.py --branch ${{ env.BRANCH_NAME }} )" >> $GITHUB_ENV
@@ -62,7 +62,7 @@ jobs:
           echo ${{ env.SNOWFLAKE_DATABASE }}
           dbt deps --target ci
 
-      - name: Create ephemeral database
+      - name: Create Ephemeral Database
         if: "!endsWith(github.ref, '/main')"
         run: |
           dbt run-operation setup_database --args '{database: ${{ env.SNOWFLAKE_DATABASE }} }'
@@ -70,7 +70,7 @@ jobs:
       - name: Build DBT
         run: dbt build
 
-      - name: Drop ephemeral database
+      - name: Drop Ephemeral Database
         run: |
           dbt run-operation drop_database --args '{database: ${{ env.SNOWFLAKE_DATABASE }} }'
         if: (github.event.action == 'closed' || github.event.pull_request.merged == true)
