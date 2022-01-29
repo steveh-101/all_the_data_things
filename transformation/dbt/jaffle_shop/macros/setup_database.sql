@@ -1,35 +1,35 @@
-{% macro set_up_db(db) %}
+{% macro setup_database(database) %}
 
-    {% if db  and db != "ANALYTICS" %}
+    {% if database  and database != "ANALYTICS" %}
 
-        {{ create_db(db) }}
-        {{ grant_tester_access(db) }}
+        {{ create_db(database) }}
+        {{ grant_tester_access(database) }}
     {% else %}
 
-        {{ exceptions.raise_compiler_error("Invalid arguments. Missing source db and/or destination db") }}
+        {{ exceptions.raise_compiler_error("Invalid arguments.") }}
 
     {% endif %}
 
 {% endmacro %}
 
 
-{% macro create_db(db) %}
+{% macro create_db(database) %}
 {% set sql -%}
-    create or replace database {{ db }};
+    create or replace database {{ database }};
 {%- endset %}
-{{ dbt_utils.log_info("Creating database " ~ db ~ "") }}
+{{ dbt_utils.log_info("Creating database " ~ database ~ "") }}
 {% do run_query(sql) %}
-{{ dbt_utils.log_info("Created database " ~ db ~ "") }}
+{{ dbt_utils.log_info("Created database " ~ database ~ "") }}
 {% endmacro %}
 
 -- TODO: every macro should be in it's own file
-{% macro grant_tester_access(db) %}
+{% macro grant_tester_access(database) %}
 {% set sql -%}
-grant usage on database {{ db }} to role tester;
+grant usage on database {{ database }} to role tester;
 use role securityadmin;
-grant usage on future schemas in database {{ db }} to role tester;
-grant select on future tables in database {{ db }} to role tester;
-grant select on future views in database {{ db }} to role tester;
+grant usage on future schemas in database {{ database }} to role tester;
+grant select on future tables in database {{ database }} to role tester;
+grant select on future views in database {{ database }} to role tester;
 {%- endset %}
 {{ dbt_utils.log_info("Granting access to role TESTER") }}
 {% do run_query(sql) %}
