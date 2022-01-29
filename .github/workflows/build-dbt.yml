@@ -64,7 +64,7 @@ jobs:
           echo ${{ env.SNOWFLAKE_DATABASE }}
           dbt deps --target ci
 
-      - name:Create ephemeral database
+      - name: Create ephemeral database
         if: "!endsWith(github.ref, '/main')"
         run: |
           dbt run-operation setup_database --args '{database: ${{ env.SNOWFLAKE_DATABASE }} }'
