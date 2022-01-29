@@ -3,8 +3,6 @@ on:
   push:
   pull_request:
     types: [closed]
-    branches:
-      - master
 
 env:
   SNOWFLAKE_DATABASE: PREPROD_ANALYTICS
