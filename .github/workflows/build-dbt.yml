@@ -1,6 +1,10 @@
 name: Build DBT
 on:
   push:
+  pull_request:
+    types: [closed]
+    branches:
+      - master
 
 env:
   SNOWFLAKE_DATABASE: PREPROD_ANALYTICS
@@ -60,10 +64,15 @@ jobs:
           echo ${{ env.SNOWFLAKE_DATABASE }}
           dbt deps --target ci
 
-      - name: dbt Create Epehemeral DB
+      - name: Create ephemeral database
         if: "!endsWith(github.ref, '/main')"
         run: |
           dbt run-operation setup_database --args '{database: ${{ env.SNOWFLAKE_DATABASE }} }'
 
       - name: Build DBT
         run: dbt build
+
+      - name: Drop ephemeral database
+        run: |
+          dbt run-operation drop_db --args "{db: ${{ env.SNOWFLAKE_DATABASE }} }"
+        if: github.event.action == 'closed'
