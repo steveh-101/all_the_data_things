@@ -74,5 +74,5 @@ jobs:
 
       - name: Drop ephemeral database
         run: |
-          dbt run-operation drop_db --args "{db: ${{ env.SNOWFLAKE_DATABASE }} }"
+          dbt run-operation drop_database --args '{database: ${{ env.SNOWFLAKE_DATABASE }} }'
         if: (github.event.action == 'closed' || github.event.pull_request.merged == true)
