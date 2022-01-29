@@ -37,6 +37,11 @@ jobs:
         if: github.event_name == 'pull_request' && endsWith(github.ref, '/main') != true
         run: echo "BRANCH_NAME=$(echo ${GITHUB_HEAD_REF} | tr / -)" >> $GITHUB_ENV
 
+      - name: Get Branch Name (merge)
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | tr / -)" >> $GITHUB_ENV
+
       - name: Set $SNOWFLAKE_DATABASE to an Ephemeral Database
         if: "!endsWith(github.ref, '/main')"
         run: |
