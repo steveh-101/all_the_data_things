@@ -1,0 +1,25 @@
+
+
+============================== 2022-11-25 00:36:44.572547 | 474d594b-00c7-4c97-9bc1-d92a7bf8b2d2 ==============================
+[0m00:36:44.572560 [info ] [MainThread]: Running with dbt=1.3.0
+[0m00:36:44.573055 [debug] [MainThread]: running dbt with arguments {'write_json': True, 'use_colors': True, 'printer_width': 80, 'version_check': True, 'partial_parse': True, 'static_parser': True, 'profiles_dir': '/Users/stephen.herron/.dbt', 'send_anonymous_usage_stats': False, 'event_buffer_size': 100000, 'quiet': False, 'no_print': False, 'project_name': 'fpl', 'skip_profile_setup': False, 'which': 'init', 'indirect_selection': 'eager'}
+[0m00:36:44.573258 [debug] [MainThread]: Tracking: do not track
+[0m00:36:44.604132 [debug] [MainThread]: Starter project path: /usr/local/lib/python3.10/site-packages/dbt/include/starter_project
+[0m00:37:54.018000 [info ] [MainThread]: Profile fpl written to /Users/stephen.herron/.dbt/profiles.yml using target's profile_template.yml and your supplied values. Run 'dbt debug' to validate the connection.
+[0m00:37:54.018581 [info ] [MainThread]: 
+Your new dbt project "fpl" was created!
+
+For more information on how to configure the profiles.yml file,
+please consult the dbt documentation here:
+
+  https://docs.getdbt.com/docs/configure-your-profile
+
+One more thing:
+
+Need help? Don't hesitate to reach out to us via GitHub issues or on Slack:
+
+  https://community.getdbt.com/
+
+Happy modeling!
+
+[0m00:37:54.019162 [debug] [MainThread]: Flushing usage events
