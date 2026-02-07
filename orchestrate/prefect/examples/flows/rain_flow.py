@@ -1,4 +1,5 @@
 import requests
+import asyncio
 
 from prefect import task, flow, get_run_logger
 
@@ -35,23 +36,23 @@ rain_notification, dry_notification = [
 
 
 @flow
-def rain_flow(city: str = "Birmingham"):
+async def rain_flow(city: str = "Birmingham"):
     logger = get_run_logger()
 
-    api_key = Secret.load("openweathermap-api-key")
-    slack_credentials = SlackCredentials.load("allthedatathings")
+    api_key = (await Secret.load("openweathermap-api-key")).get()
+    slack_credentials = await SlackCredentials.load("allthedatathings")
 
-    forecast = pull_forecast(city=city, api_key=api_key.get())
+    forecast = pull_forecast(city=city, api_key=api_key)
     rain = is_raining_this_week(forecast)
 
     message = rain_notification if rain else dry_notification
 
     logger.info(f"Sending slack message: { message }")
 
-    send_chat_message(
+    await send_chat_message(
         slack_credentials=slack_credentials, channel="#sandbox", text=message
     )
 
 
 if __name__ == "__main__":
-    rain_flow(city="Texas")
+    asyncio.run(rain_flow(city="Texas"))
