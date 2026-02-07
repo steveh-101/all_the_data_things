@@ -1,0 +1,46 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.10
+    hooks:
+      - id: ruff
+        # files: |
+        #   (?x)^(
+        #     orchestrate/prefect/.*
+        #     applications/dag_lineage/provision/aws/lambda/create_dag_lineage/.*
+        #   )$
+        args: ["--fix", "--show-fixes", "--exit-non-zero-on-fix"]
+      - id: ruff-format
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
+    hooks:
+        - id: codespell
+          exclude: package-lock.json|_vendor/.*|docs/.*
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.15.0
+    hooks:
+        - id: mypy
+          additional_dependencies:
+              - pydantic>=1.10.0,!=2.0.0,!=2.0.1,!=2.1.0,<3.0.0
+              - types-cachetools==5.3.0.5
+              - types-pyyaml==6.0.12.9
+              - types-requests==2.32.0.20240602
+          files: |
+            (?x)^(
+              orchestrate/prefect.*/.*\.py
+              provision/aws/dam/lambdas/.*\.py
+            )$
+  - repo: https://github.com/sqlfluff/sqlfluff
+    rev: 3.4.2
+    hooks:
+      - id: sqlfluff-lint
+        # For dbt projects, this installs the dbt "extras".
+        # You will need to select the relevant dbt adapter for your dialect
+        # (https://docs.getdbt.com/docs/available-adapters):
+        # additional_dependencies: ['<dbt-adapter>', 'sqlfluff-templater-dbt']
+        args: [--dialect, "snowflake"]
+      - id: sqlfluff-fix
+        # Arbitrary arguments to show an example
+        # args: [--rules, "LT02,CP02"]
+        args: [--dialect, "snowflake"]
+
+        # additional_dependencies: ['<dbt-adapter>', 'sqlfluff-templater-dbt']
