@@ -1,22 +1,20 @@
-import requests
 import asyncio
 
-from prefect import task, flow, get_run_logger
-
+import requests
+from prefect import flow, get_run_logger, task
+from prefect.blocks.system import Secret
 from prefect_slack import SlackCredentials
 from prefect_slack.messages import send_chat_message
-from prefect.blocks.system import Secret
 
 
-# Extraction Task pulls 5-day, 3-hour forcast for the provided City
+# Extraction Task pulls 5-day, 3-hour forecast for the provided City
 @task(retries=2, retry_delay_seconds=5)
 def pull_forecast(city, api_key):
     base_url = "http://api.openweathermap.org/data/2.5/forecast?"
     url = base_url + "appid=" + api_key + "&q=" + city
     r = requests.get(url)
     r.raise_for_status()
-    data = r.json()
-    return data
+    r.json()
 
 
 @task(tags=["example", "api", "weather"])
@@ -24,7 +22,7 @@ def is_raining_this_week(data):
     rain = [
         forecast["rain"].get("3h", 0) for forecast in data["list"] if "rain" in forecast
     ]
-    return True if sum([s >= 1 for s in rain]) >= 1 else False
+    bool(sum([s >= 1 for s in rain]) >= 1)
 
 
 # Notification Task sends message to Cloud once authenticated with a webhook
@@ -47,7 +45,7 @@ async def rain_flow(city: str = "Birmingham"):
 
     message = rain_notification if rain else dry_notification
 
-    logger.info(f"Sending slack message: { message }")
+    logger.info(f"Sending slack message: {message}")
 
     await send_chat_message(
         slack_credentials=slack_credentials, channel="#sandbox", text=message
